@@ -1,12 +1,18 @@
   import {MongoClient} from "mongodb";
 
-  export async function  connect(mongoConnectString,mongoDbName) {
+
+  export const Mongo = {
+
+     async  connect({mongoConnectString,mongoDbName}) {
      
     try {
         const client = new  MongoClient(mongoConnectString);
+        
         await client.connect();
         const db =   client.db(mongoDbName);
- 
+
+        this.client = client;
+        this.db = db
         return "Connected to Mongodb";
     } catch (error) {
         
@@ -15,5 +21,8 @@
     
  
   }
+
+  }
+ 
 
  
