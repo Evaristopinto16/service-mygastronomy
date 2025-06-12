@@ -7,7 +7,10 @@ import { Mongo } from   "../databases/mongo.js"
 import {ObjectId} from "mongodb";
 
 const collectionName = "users";
+/*
+Parte de controle do Usuario e da DeteCriptogracao
 
+*/
 passaprt.use(new LocalStrategy( { usernameField: "email" },async(email, password, callback)=>{
     
     const user = await Mongo.db
@@ -19,14 +22,14 @@ passaprt.use(new LocalStrategy( { usernameField: "email" },async(email, password
     if(!user){
         return callback(null, false)
     }
-    const saltBuffer = user.salt.saltBuffer;
+    const saltBuffer = user.salt.buffer;
 
-    crypto.pbkdf2(passaprt, saltBuffer, 310000, 16,"sha256", (err, hashedPassword)=>{
+    crypto.pbkdf2(password, saltBuffer, 310000, 16,"sha256", (err, hashedPassword)=>{
         if(err){
             return callback(null, false)
         }
 
-        const userPasswordBuffer = Buffer.from(user.password.Buffer)
+        const userPasswordBuffer = Buffer.from(user.password.buffer)
         if(!crypto.timingSafeEqual(userPasswordBuffer, hashedPassword))
         {
             return callback(null, false)
@@ -112,6 +115,55 @@ authRouter.post("/signup", async (req, res)=>{
                         
                     }
     })
+})
+
+authRouter.post("/login", (req, res)=>{
+    
+    passaprt.authenticate('local', (error, user)=>{
+        if(error){
+            return res.status(500).
+            send(
+                {
+                    success: false,
+                    statusCode: 500,
+                    body: {
+                        text: "Error during authentication",
+                        error
+                    }
+                }
+
+            )
+        }
+          if(!user){
+            return res.status(400).
+            send(
+                {
+                    success: false,
+                    statusCode: 400,
+                    body: {
+                        text: "user not Found",
+                        error
+                    }
+                }
+
+            )
+        }
+
+        const token = jwt.sign(user, 'secret');
+        return res.status(200).
+            send(
+                {
+                    success: true,
+                    statusCode: 200,
+                    body: {
+                        text: "User logged in correctly",
+                        user,
+                        token
+                    }
+                }
+
+            )
+    })(req, res)
 })
 
 
